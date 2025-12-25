@@ -1,0 +1,42 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.19.0' # 或者 'any'
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      # 这里我们构建 Debug 版本。
+      # 原因：Release 版本如果不配置签名文件(Keystore)，
+      # 生成的 APK 无法在大部分安卓手机上直接安装。
+      # Debug 版本自带测试签名，可以直接安装并运行。
+      - name: Build Android APK (Debug)
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: huarong-road-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
